@@ -28,23 +28,8 @@ This project implements a simplified, single-machine, Dask-like system in Java t
   readCSV("data.csv").filter(row -> row.get("Transaction").equals("5")).head(3)
   ```
 
-# Future Improvements
-### 1. Variable Support
-Each cell currently executes a complete one-liner chain. There's no support for variable assignment or reuse between cells. This is also why execute() is called implicitly on every cell.
+## Getting Started
 
-### 2. Evaluator Logic
-The evaluation engine is a naive parser. Filter expressions must follow strict format. Map functions are hardcoded and selected by name.
-
-### 3. Aggregate Function Extensions
-Only .groupBy(..., "count") is supported. Extending to sum, avg, min, max, etc., is straightforward.
-
-### 4. Data Type Handling
-All cell values are treated as strings. There's no typed schema, parsing logic, or conversion between numeric and string fields.
-
-### 5. Partition Management
-While numPartitions is tracked and propagated, there’s currently no way to repartition or dynamically adjust it based on dataset size or CPU cores.
-
-# Getting Started
 ### 1. Run the backend server
 Open and run NotebookServer.java. This will start a server on localhost:8000.
 
@@ -76,7 +61,38 @@ readCSV("Bakery.csv").filter(row -> row.get("Transaction").equals("5"))
 readCSV("Bakery.csv").map(addTransaction100)
 ```
 
-You can execute the code by clicking on "Run" or inputting Shift+Enter.
+You can execute the code by clicking on "Run" or keyboard-inputting Shift+Enter.
 
 ### 4. See results
 Output is shown directly below the code cell, or confirmation if no data is returned.
+
+## Components
+
+### 1. Java-style OOP Task Graph
+Each DataFrame operation (readCSV, filter, map, groupBy, etc.) is implemented as a subclass of TaskNode, forming a composable and lazily evaluated DAG (Directed Acyclic Graph). This promotes clear separation of concerns and extensibility.
+
+### 2. Multithreading with ExecutorService
+Operations like filter, map, and groupBy are executed in parallel across partitions using Java’s ExecutorService, allowing for efficient concurrent computation on a single machine.
+
+### 3. GUI: Interactive Notebook
+A Swing-based notebook interface allows users to type in and submit Dask-like chained code expressions (e.g., readCSV(...).filter(...).head(n)). Each cell executes independently and displays its result below the code block.
+
+### 4. Networking: Socket-based Master-Worker Architecture
+The GUI acts as the client (master) and connects via TCP socket to a server (worker). User code is sent as a string over the socket, parsed and evaluated server-side, and results are streamed back and displayed in the GUI.
+
+## Future Improvements
+
+### 1. Variable Support
+Each cell currently executes a complete one-liner chain. There's no support for variable assignment or reuse between cells. This is also why execute() is called implicitly on every cell.
+
+### 2. Evaluator Logic
+The evaluation engine is a naive parser. Filter expressions must follow strict format. Map functions are hardcoded and selected by name.
+
+### 3. Aggregate Function Extensions
+Only .groupBy(..., "count") is supported. Extending to sum, avg, min, max, etc., is straightforward.
+
+### 4. Data Type Handling
+All cell values are treated as strings. There's no typed schema, parsing logic, or conversion between numeric and string fields.
+
+### 5. Partition Management
+While numPartitions is tracked and propagated, there’s currently no way to repartition or dynamically adjust it based on dataset size or CPU cores.
